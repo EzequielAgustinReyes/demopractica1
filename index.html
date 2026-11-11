@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huellas en el Espacio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0f172a; /* Slate 900 */
+            color: #f8fafc; /* Slate 50 */
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+        }
+
+        .pixel-font {
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        /* Dialogue Box Styling */
+        .dialogue-box {
+            background: rgba(15, 23, 42, 0.85);
+            border: 4px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 8px 16px rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Pulsing Glow for Interactive Objects */
+        @keyframes subtle-pulse {
+            0% { filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.4)); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.8)); transform: scale(1.02); }
+            100% { filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.4)); transform: scale(1); }
+        }
+        .interactive-glow {
+            animation: subtle-pulse 2s infinite ease-in-out;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23facc15" d="M12 2L22 20H2L12 2Z"/></svg>'), pointer;
+            border: 2px dashed rgba(250, 204, 21, 0.5);
+            border-radius: 50%;
+        }
+        
+        .interactive-glow:hover {
+            background: rgba(250, 204, 21, 0.2);
+            border-style: solid;
+        }
+
+        /* Achievement Popup Animation */
+        @keyframes slide-up-fade {
+            0% { bottom: -100px; opacity: 0; }
+            10% { bottom: 20px; opacity: 1; transform: scale(1.1); }
+            15% { transform: scale(1); }
+            85% { bottom: 20px; opacity: 1; }
+            100% { bottom: -100px; opacity: 0; }
+        }
+        .achievement-popup {
+            animation: slide-up-fade 4s forwards ease-out;
+        }
+
+        /* Star Burst Animation for Achievement */
+        @keyframes burst {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(2) rotate(180deg); opacity: 0; }
+        }
+        .burst-star {
+            position: absolute;
+            color: #facc15;
+            animation: burst 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        /* Screen Transitions */
+        .fade-in { animation: fadeIn 0.5s forwards; }
+        .fade-out { animation: fadeOut 0.5s forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center h-screen w-full relative">
+
+    <!-- Audio Element (Placeholder for actual audio if added later) -->
+    <audio id="sfx-pop" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
+
+    <!-- SCREEN 1: Language Selection -->
+    <div id="screen-lang" class="absolute inset-0 flex flex-col items-center justify-center bg-[url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center z-50">
+        <div class="absolute inset-0 bg-black/60"></div>
+        <h1 class="pixel-font text-3xl md:text-5xl mb-12 text-yellow-400 z-10 text-center drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
+            HUELLAS EN EL ESPACIO<br><span class="text-sm md:text-xl text-white mt-4 block">Footprints in Space</span>
+        </h1>
+        <div class="flex gap-6 z-10">
+            <button onclick="setLanguage('es')" class="px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl pixel-font text-xl shadow-[0_0_15px_rgba(37,99,235,0.6)] transition-all transform hover:scale-105">
+                ¡Hola!
+            </button>
+            <button onclick="setLanguage('en')" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl pixel-font text-xl shadow-[0_0_15px_rgba(79,70,229,0.6)] transition-all transform hover:scale-105">
+                Hello!
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: Name Input -->
+    <div id="screen-name" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 z-40">
+        <div class="bg-slate-800 p-8 rounded-2xl border-2 border-slate-600 text-center max-w-md w-11/12 shadow-2xl">
+            <h2 id="ui-name-prompt" class="text-xl font-bold mb-6">¿Cómo te llamas?</h2>
+            <input type="text" id="user-name-input" class="w-full bg-slate-950 border border-slate-500 rounded-lg px-4 py-3 text-center text-lg text-white mb-6 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400" autocomplete="off" placeholder="...">
+            <button onclick="startGame()" id="ui-start-btn" class="w-full px-6 py-3 bg-green-600 hover:bg-green-500 font-bold rounded-lg transition-colors text-lg">
+                Comenzar Aventura
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: Game Screen (Visual Novel Canvas) -->
+    <div id="screen-game" class="hidden absolute inset-0 bg-black z-30">
+        
+        <!-- Background -->
+        <div id="vn-bg" class="absolute inset-0 bg-cover bg-center transition-all duration-700 ease-in-out transform scale-105"></div>
+        <div class="absolute inset-0 bg-black/20"></div> <!-- Subtle dark overlay for contrast -->
+        
+        <!-- Interactive Elements Overlay (e.g. Wind Generator Hotspot) -->
+        <div id="interactive-layer" class="absolute inset-0 pointer-events-none">
+            <!-- This div is positioned approximately where the wind generator is in the provided image -->
+            <div id="hotspot-generator" onclick="triggerAchievement()" class="hidden pointer-events-auto absolute interactive-glow" style="top: 15%; left: 45%; width: 15%; height: 35%;"></div>
+        </div>
+
+        <!-- Character Sprite -->
+        <!-- Center-bottom alignment for visual novel characters -->
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-[800px] h-[75vh] flex justify-center pointer-events-none">
+            <img id="vn-character" src="" alt="Character" class="hidden h-full object-contain transition-opacity duration-300 drop-shadow-2xl">
+        </div>
+
+        <!-- Dialogue Box -->
+        <div class="absolute bottom-6 w-full flex justify-center px-4 cursor-pointer" onclick="advanceDialogue()">
+            <div class="dialogue-box w-full max-w-4xl relative p-6 md:p-8 flex flex-col justify-center min-h-[160px] md:min-h-[200px]">
+                
+                <!-- Speaker Name Tag -->
+                <div id="speaker-box" class="hidden absolute -top-5 left-6 bg-blue-700 border-2 border-white px-4 py-1 rounded shadow-lg">
+                    <span id="speaker-name" class="pixel-font text-xs md:text-sm text-yellow-300"></span>
+                </div>
+                
+                <!-- Dialogue Text -->
+                <p id="dialogue-text" class="text-lg md:text-2xl leading-relaxed"></p>
+                
+                <!-- Next Indicator -->
+                <div class="absolute bottom-3 right-5 animate-bounce">
+                    <span class="text-xl md:text-2xl text-yellow-400">▼</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Achievement Popup Container -->
+        <div id="achievement-container" class="absolute left-1/2 transform -translate-x-1/2 bottom-[-100px] z-50 hidden">
+            <div class="bg-yellow-400 text-slate-900 border-4 border-white rounded-full px-6 py-3 flex items-center gap-3 shadow-[0_0_20px_rgba(250,204,21,0.6)]">
+                <span class="text-2xl">🌟</span>
+                <div>
+                    <h4 id="achiev-title" class="font-bold pixel-font text-[10px] uppercase">¡Insignia Desbloqueada!</h4>
+                    <p id="achiev-desc" class="text-sm font-semibold mt-1">Encontraste el Generador (Vanguard)</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- GAME LOGIC -->
+    <script>
+        // --- GAME STATE ---
+        const state = {
+            lang: 'es',
+            userName: '',
+            guideName: '',
+            guideImage: '',
+            currentLineIndex: 0,
+            achievementUnlocked: false
+        };
+
+        // Static Assets
+        const IMAGES = {
+            mily: 'Gemini_Generated_Image_6gyxag6gyxag6gyx.png',
+            wily: 'Gemini_Generated_Image_ohb00dohb00dohb0.png',
+            busWindow: 'Gemini_Generated_Image_s7qoazs7qoazs7qo.jpg',
+            spaceDream: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2000&auto=format&fit=crop', // generic space proxy
+            schoolRoom: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2000&auto=format&fit=crop' // dark classroom proxy
+        };
+
+        // --- DICTIONARY (Translations) ---
+        const dict = {
+            es: {
+                ui_name_prompt: "¿Cuál es tu nombre?",
+                ui_start_btn: "Comenzar Aventura",
+                speaker_guide: "{guide}",
+                speaker_user: "{name}",
+                speaker_sabelotodo: "Sabelotodo",
+                speaker_otro: "Otro",
+                achiev_title: "¡Insignia Desbloqueada!",
+                achiev_desc: "Encontraste el Generador Eólico (Vanguard)",
+                
+                // Scene 1: SUEÑO ESPACIAL
+                s1_l1: "(Misión en curso) ¡Los propulsores están al máximo! Estás a punto de acoplarte al módulo central cuando de repente...",
+                
+                // Scene 2: DESPERTAR CALIDO
+                s2_l1: "¡Despierta Amix! Ya pronto abordaremos los autobuses hacia el campamento de verano en la isla la luna! Es tu primera vez? Qué bueno que llegaste, {name}!",
+                
+                // Scene 3: TODOS A BORDO
+                s3_l1: "¡Jaja, parece que tú ya andabas de sueños en la luna! Pero, ¿sabías que en el espacio hay objetos que ayudaron a crear nuestra realidad presente?",
+                s3_l2: "¿Igual que el ventilador gigante del invernadero?",
+                s3_l3: "¡Jaja, sí, pero no es un ventilador! ¡Es un generador eólico!",
+                s3_l4: "¿Ke?",
+                s3_l5: "Justo cuando comenzó la fiebre por energías renovables hicieron una feria entre alumnos y aunque el generador eólico parecía una burla, al final inspiró a los directivos a desplegar uno aquí mismo...",
+                s3_l6: "Además, los de mantenimiento dicen que desde ahí la escuela parece una pera. Hoy sigue ahí porque estuvo muy bien hecho; aunque ya no genera energía, se volvió parte del hermoso paisaje de nuestra escuela.",
+                s3_l7: "Incluso la otra escuela del pueblo intentó poner uno parecido pero se lo llevó la primera tormenta. Gracias a su buen desempeño, más escuelas comenzaron a utilizar y enseñar energías renovables de forma práctica.",
+                s3_l8: "¡Oye! ¡Es igual a la sonda espacial Vanguard!",
+                s3_l9: "¿Cuál?",
+                s3_l10: "Nadie creía en ella por introducir paneles solares, pero fue todo un éxito y a la fecha sigue allá arriba.",
+                s3_l11: "¡Quién sabe qué estás diciendo, jajaja!"
+            },
+            en: {
+                ui_name_prompt: "What is your name?",
+                ui_start_btn: "Start Adventure",
+                speaker_guide: "{guide}",
+                speaker_user: "{name}",
+                speaker_sabelotodo: "Know-it-all",
+                speaker_otro: "Other Student",
+                achiev_title: "Badge Unlocked!",
+                achiev_desc: "You found the Wind Generator (Vanguard)",
+                
+                // Scene 1
+                s1_l1: "(Mission in progress) Thrusters are at max! You are about to dock with the central module when suddenly...",
+                
+                // Scene 2
+                s2_l1: "Wake up Amix! We're about to board the buses to the summer camp on moon island! Is it your first time? I'm so glad you made it, {name}!",
+                
+                // Scene 3
+                s3_l1: "Haha, looks like you were already dreaming on the moon! But did you know there are objects in space that helped shape our present reality?",
+                s3_l2: "Like the giant fan in the greenhouse?",
+                s3_l3: "Haha, yes, but it's not a fan! It's a wind generator!",
+                s3_l4: "Wat?",
+                s3_l5: "Right when the renewable energy craze started, they held a student fair. Even though the wind generator seemed like a joke, it inspired the board to build one right here...",
+                s3_l6: "Plus, maintenance says from up there, the school looks like a pear. It's still there today because it was so well built; even though it doesn't generate power anymore, it became part of our beautiful landscape.",
+                s3_l7: "The other school in town even tried to put up a similar one, but the first storm blew it away. Thanks to its great performance, more schools started using and teaching renewable energy practically.",
+                s3_l8: "Hey! It's just like the Vanguard space probe!",
+                s3_l9: "Which one?",
+                s3_l10: "Nobody believed in it because it introduced solar panels, but it was a total success and it's still up there to this day.",
+                s3_l11: "Who knows what you're talking about, hahaha!"
+            }
+        };
+
+        // --- STORY SCRIPT ---
+        // Array of script lines mapping to dictionary keys and defining assets
+        const scriptLines = [
+            // SCENE 1: SUEÑO
+            { speaker: null, textKey: 's1_l1', bg: IMAGES.spaceDream, sprite: null, hideGenerator: true },
+            
+            // SCENE 2: DESPERTAR
+            { speaker: 'speaker_guide', textKey: 's2_l1', bg: IMAGES.schoolRoom, sprite: '{guideImg}', hideGenerator: true },
+            
+            // SCENE 3: TODOS A BORDO
+            { speaker: 'speaker_guide', textKey: 's3_l1', bg: IMAGES.busWindow, sprite: '{guideImg}', showGenerator: true },
+            { speaker: 'speaker_user', textKey: 's3_l2', bg: IMAGES.busWindow, sprite: null, showGenerator: true },
+            { speaker: 'speaker_guide', textKey: 's3_l3', bg: IMAGES.busWindow, sprite: '{guideImg}', showGenerator: true },
+            { speaker: 'speaker_user', textKey: 's3_l4', bg: IMAGES.busWindow, sprite: null, showGenerator: true },
+            { speaker: 'speaker_guide', textKey: 's3_l5', bg: IMAGES.busWindow, sprite: '{guideImg}', showGenerator: true },
+            { speaker: 'speaker_guide', textKey: 's3_l6', bg: IMAGES.busWindow, sprite: '{guideImg}', showGenerator: true },
+            { speaker: 'speaker_guide', textKey: 's3_l7', bg: IMAGES.busWindow, sprite: '{guideImg}', showGenerator: true },
+            
+            // Interaction: Sabelotodo enters
+            { speaker: 'speaker_sabelotodo', textKey: 's3_l8', bg: IMAGES.busWindow, sprite: null, showGenerator: true },
+            { speaker: 'speaker_user', textKey: 's3_l9', bg: IMAGES.busWindow, sprite: null, showGenerator: true },
+            { speaker: 'speaker_sabelotodo', textKey: 's3_l10', bg: IMAGES.busWindow, sprite: null, showGenerator: true },
+            { speaker: 'speaker_otro', textKey: 's3_l11', bg: IMAGES.busWindow, sprite: null, showGenerator: true },
+            
+            // END
+            { speaker: null, textKey: null, action: 'END_DEMO' }
+        ];
+
+        // --- FUNCTIONS ---
+
+        // Get translation helper
+        function t(key) {
+            let text = dict[state.lang][key] || key;
+            // Variable replacements
+            text = text.replace('{name}', state.userName);
+            text = text.replace('{guide}', state.guideName);
+            return text;
+        }
+
+        // 1. Language Setup
+        function setLanguage(lang) {
+            state.lang = lang;
+            
+            // Update UI texts for Name Screen
+            document.getElementById('ui-name-prompt').innerText = t('ui_name_prompt');
+            document.getElementById('ui-start-btn').innerText = t('ui_start_btn');
+            
+            // Transition screens
+            document.getElementById('screen-lang').classList.add('fade-out');
+            setTimeout(() => {
+                document.getElementById('screen-lang').classList.add('hidden');
+                const nameScreen = document.getElementById('screen-name');
+                nameScreen.classList.remove('hidden');
+                nameScreen.classList.add('fade-in');
+            }, 500);
+        }
+
+        // 2. Start Game (Name processing & Guide assignment)
+        function startGame() {
+            const nameInput = document.getElementById('user-name-input').value.trim();
+            if(!nameInput) return; // simple validation
+
+            state.userName = nameInput;
+
+            // Randomly pick Guide: Mily or Wily
+            const isMily = Math.random() > 0.5;
+            state.guideName = isMily ? 'Mily' : 'Wily';
+            state.guideImage = isMily ? IMAGES.mily : IMAGES.wily;
+
+            // Prepare Achievement Texts
+            document.getElementById('achiev-title').innerText = t('achiev_title');
+            document.getElementById('achiev-desc').innerText = t('achiev_desc');
+
+            // Transition to Game Screen
+            document.getElementById('screen-name').classList.remove('fade-in');
+            document.getElementById('screen-name').classList.add('fade-out');
+            setTimeout(() => {
+                document.getElementById('screen-name').classList.add('hidden');
+                document.getElementById('screen-game').classList.remove('hidden');
+                document.getElementById('screen-game').classList.add('fade-in');
+                
+                // Initialize visual novel renderer
+                renderLine(state.currentLineIndex);
+            }, 500);
+        }
+
+        // 3. Render Visual Novel Line
+        function renderLine(index) {
+            const line = scriptLines[index];
+            
+            if (line.action === 'END_DEMO') {
+                endDemo();
+                return;
+            }
+
+            // Background update (with subtle zoom effect reset to avoid stale transforms)
+            const bgEl = document.getElementById('vn-bg');
+            if(bgEl.style.backgroundImage !== `url("${line.bg}")`) {
+                bgEl.style.backgroundImage = `url("${line.bg}")`;
+                // Re-trigger animation trick
+                bgEl.classList.remove('scale-105');
+                void bgEl.offsetWidth; 
+                bgEl.classList.add('scale-105');
+            }
+
+            // Speaker Tag
+            const speakerBox = document.getElementById('speaker-box');
+            const speakerNameEl = document.getElementById('speaker-name');
+            if (line.speaker) {
+                speakerNameEl.innerText = t(line.speaker);
+                speakerBox.classList.remove('hidden');
+                
+                // Dynamic colors for speakers just for visual flair
+                if(line.speaker === 'speaker_guide') speakerBox.className = "absolute -top-5 left-6 bg-blue-600 border-2 border-white px-4 py-1 rounded shadow-lg";
+                else if(line.speaker === 'speaker_user') speakerBox.className = "absolute -top-5 left-6 bg-green-600 border-2 border-white px-4 py-1 rounded shadow-lg";
+                else speakerBox.className = "absolute -top-5 left-6 bg-purple-600 border-2 border-white px-4 py-1 rounded shadow-lg";
+                
+            } else {
+                speakerBox.classList.add('hidden');
+            }
+
+            // Dialogue Text
+            // A simple typewriter effect can be added here, but direct setting is safer for interaction
+            document.getElementById('dialogue-text').innerText = t(line.textKey);
+
+            // Sprite Rendering
+            const spriteEl = document.getElementById('vn-character');
+            if (line.sprite) {
+                const imgPath = line.sprite === '{guideImg}' ? state.guideImage : line.sprite;
+                spriteEl.src = imgPath;
+                spriteEl.classList.remove('hidden');
+                spriteEl.classList.add('fade-in');
+            } else {
+                spriteEl.classList.add('hidden');
+            }
+
+            // Generator Interactive Layer
+            const genHotspot = document.getElementById('hotspot-generator');
+            if (line.showGenerator && !state.achievementUnlocked) {
+                genHotspot.classList.remove('hidden');
+            } else {
+                genHotspot.classList.add('hidden');
+            }
+        }
+
+        // 4. Advance Dialogue
+        function advanceDialogue() {
+            if (state.currentLineIndex < scriptLines.length - 1) {
+                state.currentLineIndex++;
+                renderLine(state.currentLineIndex);
+            }
+        }
+
+        // 5. Interactive Achievement
+        function triggerAchievement() {
+            if (state.achievementUnlocked) return;
+            state.achievementUnlocked = true;
+
+            // Hide hotspot
+            document.getElementById('hotspot-generator').classList.add('hidden');
+
+            // Play Pop Sound (silently fails if not supported, but provides feedback)
+            try {
+                const sfx = document.getElementById('sfx-pop');
+                sfx.volume = 0.5;
+                sfx.play();
+            } catch(e){}
+
+            // Show UI Popup
+            const container = document.getElementById('achievement-container');
+            container.classList.remove('hidden');
+            container.classList.add('achievement-popup');
+            
+            // Particle effect logic (creating tiny stars around the screen)
+            createParticles();
+
+            // Hide popup after animation
+            setTimeout(() => {
+                container.classList.add('hidden');
+                container.classList.remove('achievement-popup');
+            }, 4000);
+        }
+
+        function createParticles() {
+            const screen = document.getElementById('screen-game');
+            for(let i=0; i<15; i++) {
+                let star = document.createElement('div');
+                star.innerHTML = "✨";
+                star.className = "burst-star text-2xl md:text-4xl";
+                // Random position roughly center screen
+                star.style.left = (40 + Math.random() * 20) + "%";
+                star.style.top = (30 + Math.random() * 30) + "%";
+                
+                // Random direction logic simplified with css transform in keyframes, 
+                // but let's just scatter them
+                star.style.setProperty('--tx', (Math.random() * 200 - 100) + 'px');
+                star.style.setProperty('--ty', (Math.random() * 200 - 100) + 'px');
+                
+                // override animation to use transforms
+                star.style.animation = "none";
+                star.animate([
+                    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                    { transform: `translate(${Math.random() * 300 - 150}px, ${Math.random() * 300 - 150}px) scale(0)`, opacity: 0 }
+                ], { duration: 800 + Math.random()*400, easing: 'ease-out' });
+
+                screen.appendChild(star);
+                
+                setTimeout(() => star.remove(), 1200);
+            }
+        }
+
+        // 6. End of Demo Scene
+        function endDemo() {
+            const textEl = document.getElementById('dialogue-text');
+            const speakerBox = document.getElementById('speaker-box');
+            const spriteEl = document.getElementById('vn-character');
+            
+            speakerBox.classList.add('hidden');
+            spriteEl.classList.add('hidden');
+            
+            textEl.innerHTML = state.lang === 'es' ? 
+                "<span class='text-yellow-400 font-bold'>¡Fin de la demo!</span><br>Gracias por jugar Huellas en el Espacio." : 
+                "<span class='text-yellow-400 font-bold'>End of demo!</span><br>Thank you for playing Footprints in Space.";
+            
+            textEl.classList.add('text-center');
+            document.getElementById('hotspot-generator').classList.add('hidden');
+        }
+
+    </script>
+</body>
+</html>
